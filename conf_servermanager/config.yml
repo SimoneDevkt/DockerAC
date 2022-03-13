@@ -1,0 +1,306 @@
+################################################################################
+#
+#                      Assetto Server Manager Configuration
+#             https://github.com/JustaPenguin/assetto-server-manager
+#
+#                       Thanks for using server manager!
+#
+#
+# note that changes to this file require a restart of server manager to work! :)
+#
+#
+# The below file is in YAML configuration format. Spacing is important within
+# YAML, and can cause server manager not to launch correctly. You can validate
+# this file online at: http://www.yamllint.com/
+#
+################################################################################
+
+################################################################################
+#
+#  steam settings - server manager can install the assetto corsa
+#                   server for you using steamcmd (if you'd like)
+#
+################################################################################
+steam:
+  # steam username and password. we recommend creating a separate account with
+  # steamguard disabled to use this application. Assetto Corsa Server is FREE
+  # so you don't need to worry about purchasing it again.
+  #
+  # server manager uses this information ONLY to install the
+  # assetto corsa server.
+  #
+  # however, if you do not wish to provide server manager with this information,
+  # leave it blank and install assetto corsa server to the path you specified in
+  # install_path (default: 'assetto')
+  username: 
+  password: 
+
+  # where to install assetto corsa server
+  install_path: assetto
+
+  # set this to true to force an install every time the server manager is loaded
+  force_update: false
+
+################################################################################
+#
+#  http settings
+#
+################################################################################
+http:
+  # hostname is the hostname the HTTP server should listen on.
+  # change '0.0.0.0' to 'localhost' if you don't want server manager to be
+  # available on the web.
+  hostname: 0.0.0.0:8772
+
+  # session key is used to encrypt the http session
+  # You MUST change this. You can use a website such
+  # as https://passwordsgenerator.net/ to generate a value for it.
+  session_key: f7b00b7cfbc96cb929ee39ee5669eaa21fdf239d3c5f813a568b5f606e9a75e8
+
+  # server manager base URL is the URL that the server manager is accessible on
+  # used for ACSR integration and links in championship welcome message in game
+  # you can leave this blank if not required
+  # example: https://opengt3.emperorservers.com <-- requires https:// or
+  # http://, no closing / at the end
+  server_manager_base_URL:
+
+  # session store type can be one of: 'cookie' or 'filesystem'
+  # if it is 'filesystem', you must set the session_store_path below.
+  # cookie is best for most users, but if you are running multiple Server
+  # Manager instances on the same IP address, you should use filesystem.
+  session_store_type: cookie
+
+  # session store path is where to save the session store
+  # (if using 'filesystem' above)
+  session_store_path: ""
+
+  # session max age. uncomment this to change the session max age from the default (30 days).
+  # if you're using the 'filesystem' session_store_type, sessions older than this age will
+  # be cleared up every 48h.
+  # session_max_age: 720h
+
+  tls:
+    # TLS configuration. Server Manager supports TLS v1.2 upwards. As of 12/03/2020,
+    # the Server Manager configuration yields a perfect score from SSL Labs.
+    # If you enable this, you likely want the hostname (above) to listen on port 443.
+    enabled: false
+    # the path to the SSL certificate file.
+    cert_path: ""
+    # the path to the SSL key file.
+    key_path: ""
+
+################################################################################
+#
+#  monitoring - enabling monitoring allows us to find out more information
+#  about how you're using Server Manager, as well as seeing any issues that may
+#  occur so we can collect and fix them. We understand that you may not wish
+#  for us to do any monitoring, so you can disable it by setting 'enabled'
+#  to false
+#
+################################################################################
+#  with monitoring enabled, the following systems are in place:
+#
+#  1. Sentry (https://sentry.io) monitoring of both Server Manager's backend
+#     code and frontend javascript. This lets us see application errors when
+#     they occur.
+#
+#  2. Google Analytics (https://analytics.google.com) tracking so we can see how
+#     many people use Server Manager, when they use it and where they are in
+#     the world.
+#
+#  3. Prometheus Monitoring - this provides more technical debugging in terms of
+#     memory and CPU usage, etc. This is *NOT* sent to us. We have added this in
+#     so that anybody who wants to monitor Server Manager for themselves can do
+#     so with Prometheus. We use it internally at assettocorsaservers.com to
+#     track our Server installs to help us improve our service.
+#
+#     you can access the prometheus endpoint at:
+#                <your servermanager domain>/metrics
+#
+#
+# once again, if you do not wish for Server Manager to do these things, simply
+# set 'enabled' to false and monitoring will not take place.
+################################################################################
+monitoring:
+  enabled: true
+
+################################################################################
+#
+#  data storage - where server manager keeps your data!
+#
+################################################################################
+store:
+  # store type: this can be one of:
+  #  - 'json'   - saves each custom race, championship as separate JSON files
+  #               in the directory specified by store_path
+  #  - 'boltdb' - saves all content inside a single database file specified by
+  #               store_path
+  #
+  # boltdb is recommended for most users.
+  type: boltdb
+
+  # where to save the server manager data
+  path: server_manager.db
+
+  # shared data path: Set the same directory for multiple AC Server Manager
+  # instances to share accounts, race weekend, championship, entrants and custom
+  # events across them. Leave blank to use the same path as the one set up here.
+  # works only with JSON database
+  shared_data_path:
+
+  # check for new scheduled races not created by server manager on a loop. this is an experimental
+  # feature, and should not be used by most people. formats look like, e.g. 15s, 1m, 2h
+  # 0s == disabled. recommended values are 5m and above.
+  scheduled_event_check_loop: 0s
+
+################################################################################
+#
+#  user management - this is now mostly done via the web interface.
+#
+################################################################################
+accounts:
+  # admin password override is used to override the admin password in the case
+  # that you have forgotten it. set it to e.g. 'password' and log in with:
+  # username: admin
+  # password: password
+  # and you will be prompted to change your admin password back to something you
+  # can remember
+  # 
+  # If you are logging in for the first time, do not use this override system.
+  # Instead, log in by using these credentials:
+  # username: admin
+  # password: servermanager
+  # As soon as you log in, you will be immediately asked to set a new password.
+  admin_password_override:
+
+################################################################################
+#
+#  live map config
+#
+################################################################################
+live_map:
+  # how often to refresh the map data in milliseconds. This value can't be below
+  # 200. If you find that championship events do not finish properly, try
+  # changing this to a higher number.
+  # set this to 0 to disable live map.
+  refresh_interval_ms: 500
+
+
+################################################################################
+#
+#  server config
+#
+################################################################################
+server:
+  # Server Manager should never need running as admin/root.
+  # If the below setting is set to `false`, Server Manager will not error and exit
+  # if it is running as admin/root. If the setting is `true`, Server Manager will
+  # not start if you run it as admin/root.
+  enable_admin_check: false
+
+  # audit logging logs the actions of registered users locally on your server.
+  # Only Admins can access the logs, they are intended for tracking if users
+  # have deleted content, started/stopped events when they shouldn't have etc.
+  audit_logging: true
+
+  # Server Manager has built in support for some plugins (sTracker, KissMyRank
+  # and Real Penalty). If you want to use these plugins you can enable them
+  # here, then use the Server Manager UI to activate and configure them.
+  #
+  # note: If you are using any of these plugins please do not contact us for
+  # support with them. If you are experiencing any issues with stability etc.
+  # the first thing we will always suggest is disabling plugins. If you are
+  # experiencing issues with the plugins themselves we cannot provide
+  # support as we do not have access to the source code of the plugins.
+  disable_plugins: false
+
+  # performance mode disables live timing entirely, and prioritises low cpu
+  # usage.
+  performance_mode: false
+
+  # set this to 'true' if you don't want server manager to open a browser window
+  # on launch on windows
+  dont_open_browser: false
+
+  # set this to 'true' if you want server manager to scan content folders for
+  # changes every 15 seconds and update the search index with changes
+  # this is useful for multi-server setups with a shared content folder so that
+  # each server manager instance can see added/removed cars as they change
+  scan_content_folder_for_changes: false
+
+  # the following options are specific to results files.
+  results:
+    # index laps tells the results search indexer to store laps in the results search index.
+    # please note that enabling this can lead to extremely long indexing times.
+    # it is useful if you wish to perform searches in the results page based on lap times.
+    # you can change this option at any time, but it will require an index rebuild on the Server Options page.
+    index_laps: false
+
+    # index crashes tells the results search indexer to store crashes in the results search index.
+    # please note that enabling this can lead to extremely long indexing times.
+    # it is useful if you wish to perform searches in the results page based on crashes.
+    # you can change this option at any time, but it will require an index rebuild on the Server Options page.
+    index_crashes: false
+
+  # list of commands to run on server start and kill on server stop. this should
+  # contain the full command with arguments to run the given program.
+  #
+  # note: if you are looking for stracker support, Server Manager supports it via
+  # the UI! Go to the "STracker" page in Server Manager for more instructions.
+  #
+  # note #2: if you are looking for KissMyRank support, Server Manager supports it
+  # via the UI! Go to the "KissMyRank" page in Server Manager for more instructions.
+  #
+  # you can use additional plugins with AC Server Manager, but while configuring
+  # them you have to ignore the ports that AC Server Manager writes in the 
+  # server_cfg.ini, as the Server Manager provides an interface to the plugins
+  # instead. The plugin ports in the Server Options page are the ones that must
+  # be used for the plugin configuration.
+  #
+  # Note that AC Server Manager provides an interface for a single plugin only, 
+  # as the AC game server does. If you want to chain multiple plugins, please
+  # follow the documentation of the plugins you're using. Plugins usually 
+  # feature interfaces so additional plugins can be chained between themselves.
+  #
+  # you can of course add your own commands (whatever you like!) here.
+  #
+  # each executable specified is run from the directory it is inside, for example,
+  # the command:
+  #
+  # /my/cool/plugin/path/run.sh --some-opt config.json
+  # now actually performs the following two commands:
+  #
+  # 1. cd /my/cool/plugin/path
+  # 2. ./run.sh --some-opt config.json
+  plugins:
+    # uncomment the two lines below to run the command '/my/cool/plugin/path/run.sh --some-opt config.json'
+     - executable: assetto/simview/SimViewWriter
+       arguments: []
+
+################################################################################
+#
+#  championships
+#
+################################################################################
+championships:
+  # reCAPTCHA is used to protect registration requests to championships. You
+  # must specify a site_key and secret_key to enable reCAPTCHA
+  # Register for reCAPTCHA here: https://www.google.com/recaptcha
+  # Please note you must register for reCAPTCHA v2.
+  #
+  # Note: reCAPTCHA is NOT required, but highly recommended if you are running
+  # Championship Sign Up Forms
+  recaptcha:
+    site_key:
+    secret_key:
+
+################################################################################
+#
+#  lua config - configure lua plugins
+#
+################################################################################
+lua:
+  # lua plugins allow you to run custom lua scripts through hooks with server
+  # manager! If you're interested have a look at the server-manager/plugins
+  # folder to see some examples!
+  enabled: false

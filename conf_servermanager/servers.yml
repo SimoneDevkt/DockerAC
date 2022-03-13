@@ -1,0 +1,4 @@
+# servers.yml - multiserver configuration for server manager
+
+# change this number to the number of servers you would like to be set up for you.
+servers: 5

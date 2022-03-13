@@ -1,0 +1,232 @@
+# Note: Please go through this before modifying any configs
+#
+# Whenever new update comes with change in config.detail.toml (it will be marked in changelog),
+# replace your old config.toml with new one
+#
+# Configs marked with value like <> are required to be change else servers will not start,
+# rest you can leave as it is if it meets your requirements
+#
+# Value type:
+# <string>      Ex. 'abc'  (Prefer single quote (') instead of double quote (") unless your value has single quote in itself.
+#                          Single quote will allow backward slash (\) in Windows paths)
+# <integer>     Ex. 123
+# <bool>        Ex. true or false only
+
+
+######################################################
+# Config for Game
+######################################################
+[game]
+# Location of Assetto Corsa server directory, used to get car and track info.
+# For car and track info make sure ui folders of respective cars and tracks are also present.
+# This should be absolute path to root folder of AC server without the trailing slash
+# Ex: 'C:/Steam/steamapps/common/assettocorsa/server' or
+# Ex: 'C:\Steam\steamapps\common\assettocorsa\server' on Windows (Both forward and backward slash will work on Windows)
+# Ex: '/home/ubuntu/server' on Linux (Use forward slash for Linux)
+path = '/home/assetto/server-manager/servers/SERVER_03/assetto'
+
+
+######################################################
+# Config for HTTP App
+######################################################
+[app]
+    # App HTTP server configs
+    [app.server]
+    # IP address to bind HTTP port
+    # Default: '0.0.0.0'
+    host = '0.0.0.0'
+
+    # Port of HTTP server
+    # Default: 10100
+    port = 10100
+
+    # IP address or hostname or domain name where the HTTP server is running
+    # This will be used to show live event link in Welcome message in AC chat
+    # Default: '', in this case link won't be shown in the message
+    public.host = ''
+
+    # Absolute path (if not 'html') of public UI files without the trailing slash
+    # Note: Only change if you are copying or moving html folder out of default location
+    # Default: 'html' folder in current directory
+    doc.root = 'html'
+
+    # Absolute path to folder where to cache AC specific assets files ex. track preview and car badge.
+    # This is required as once you remove/change content of AC server the cached files will be used when viewing old event pages
+    # It is recommended to have this directory outside simview folder so you can update simview without overwriting it.
+    cache.path = '/home/assetto/server-manager/servers/SERVER_03/assetto/simview'
+
+    # Number of thread to process HTTP requests
+    # 0 indicates that number of threads will be automatically set by HTTP process based on available CPUs
+    # Any non-zero value will set threads to that specific value
+    # Default: 0
+    threads = 0
+
+    [app.live]
+    # When enabled user chat will be saved in DB and shown in Session Feed
+    # When disabled chats are not stored in DB.
+    # Default: false
+    session.feed.show.chat = false
+
+
+######################################################
+# Config for Writer
+######################################################
+[writer]
+    # Config for HTTP server in Writer process to server Leaderboard websocket API
+    # Every writer will have a HTTP server for Leaderboard API with dedicated one port and thread
+    [writer.http]
+
+    # Port used by HTTP server to listen for Websocket connection.
+    # This port will have to be opened to public in your machine (VM) so that viewer
+    # can connect to leaderboard
+    # Default: 0, when it is 0 the local port of Writer process (ac.server.udp.local.port)
+    # will be used for leaderboard HTTP server as well
+    port = 0
+
+    # Periodic broadcast interval for Live Leaderboard API in milliseconds
+    # This is the interval in which viewer will receive update to live leaderboard
+    # once they are connected to websocket
+    # Default: 2000 (= 2s)
+    leaderboard.broadcast.interval.ms = 2000
+
+
+######################################################
+# Logging file will be generated in 'log' directory
+# Used by both HTTP and Writer process
+######################################################
+[log]
+# Target 'console' or 'file'
+# Default: 'file'
+target = 'console'
+
+# Level 'trace', 'debug', 'info', 'warning', 'error', 'critical', 'off'
+# Default: 'info'
+level = 'info'
+
+
+######################################################
+# Assetto Corsa Server and event detail
+######################################################
+[ac.server]
+# IP address of the Assetto Corsa server
+# Default: '127.0.0.1'
+host = '127.0.0.1'
+
+# Update driver name when they connect with new name to the server
+# This could be set on per writer process if you are running multiple
+# Default: false
+update.driver.name = false
+
+    # AC server UDP Plugin ports
+    [ac.server.udp]
+    # Port opened by Assetto Corsa server
+    # In AC server's server_cfg.ini file, the value set for UDP_PLUGIN_LOCAL_PORT after
+    # enabling UDP plugin for AC server. You only need to set it when you are using some
+    # proxy app (like sTracker or ACRelay) else you can leave it to default (0) so that it
+    # will automatically get picked from the server_cfg.ini file
+    # Default: 0 (port will be picked from AC server config file)
+    # 11100
+    port = 0
+
+    # Port used by SimView to received packets from AC server
+    # In AC server's server_cfg.ini file, the port set in UDP_PLUGIN_ADDRESS.
+    # Ex. If UDP_PLUGIN_ADDRESS is 127.0.0.1:10002, set only 10002 value here.
+    # You only need to set it when you are using some
+    # proxy app (like sTracker or ACRelay) else you can leave it to default (0) so that it
+    # will automatically get picked from the server_cfg.ini file
+    # '10.5.0.7:12100'
+    local.port = 0
+
+    # With Assetto Corsa Server Manager (ACSM) v2+, the AC server log format has been changed.
+    # To get correct leaderboard with Sector times and Tyre info make this config true when using AC servers
+    # from ACSM v2+. When enabled SimView will use Enhanced UDP interface of ACSM to get sector times and current tyre
+    # Note: Tyre info is only available from ACSM v2.1.4
+    # Default: false
+    use.acsm.udp = true
+
+    # The interval in milliseconds to receive realtime update from AC server
+    # Accuracy can be improved with lower value for this but the default is good enough
+    # Note: This config should be always less then writer.leaderboard.broadcast.interval.ms
+    # Default: 200 (5Hz)
+    realtime.update.interval.ms = 200
+
+    [ac.server.event]
+    # Event name, all sessions with this name will be grouped together
+    # Default: Use the server name as event name, those will also be grouped
+    name = ''
+
+    # When enabled SimView will store telemetry in DB for each eligible lap done on the server.
+    # ac.server.udp.realtime.update.interval.ms directly
+    # influence the accuracy of sampled telemetry and also the telemtry data size for a lap.
+    # If disabling this feature you can also consider to increase ac.server.udp.realtime.update.interval.ms
+    # Default: true
+    lap.telemetry.enable = true
+
+        [ac.server.event.team]
+        # If this event is team based event modify this to true. When teams is enable it will parse and
+        # create teams based on entry_list.ini file. The GUIDs should be ';' separated and
+        # make sure LOCKED_ENTRY_LIST=1 and PICKUP_MODE_ENABLED=1 is set in server_cfg.ini file
+        # Note: All config below this will only be effective if this is true.
+        # Default: false
+        enable = false
+
+        # If you are providing team names in entry_list.ini file in format 'no.|Team Name' like
+        # '32|Awesome Team' then 32 will be used as team number in leaderboard and 'Awesome Team' as team name
+        # Default: false
+        use.number = false
+
+        # If you want to enable car livery preview in team's UI page for this event set this to true.
+        # Make sure livery file are present in the server. More specifically it uses preview.png (or preview.jpg)
+        # file of the skin to show in UI. This is mostly liked be used when using
+        # custom liveries though it will work for stock liveries also
+        livery.preview.enable = false
+
+
+######################################################
+# MySQL database details to store session data
+######################################################
+[database]
+# MySQL server host name
+# Only change it when you are running MySQL server on different machine
+# In that case use that's server IP/hostname here
+# Default: '127.0.0.1'
+host = '10.5.0.5'
+
+# MySQL server port
+# Only used when MySQL server is not running on same machine
+# i.e above host config is not localhost
+# Default: 0
+port = 0
+
+# MySQL user name to connect to database
+# Default: 'simview'
+user = 'simview'
+
+# MySQL database name which will be used by SimView
+# Default: 'simview'
+schema = 'simview'
+
+# Password to access MySQL Database
+password = 'simviewpw'
+
+
+######################################################
+# Overrides
+######################################################
+[overrides]
+    # Override default car class. The updated value will be saved in DB
+    # when the first time the car is used once the config is added here
+    # Name used here should be the folder name of that car in AC directory
+    # e.x To override class for Mazda MX5 to 'Cup' add
+    # ks_mazda_mx5_cup = 'Cup'
+    [overrides.car.class]
+    # ks_mazda_mx5_cup = 'Cup'
+
+    # Override user/driver country. Get the country codes from https://www.countryflags.io/ website.
+    # Use the captial letter ones like 'AD', 'IT' etc.
+    # When the first time driver connect after adding here his country will be updated to DB
+    # Left hand side should be steam id of the driver
+    # e.x To override country for driver with steam id 76561198252222222 to Italy (code: IT) add
+    # 76561198252222222 = 'IT'
+    [overrides.user.country]
+    # 76561198252222222 = 'IT'

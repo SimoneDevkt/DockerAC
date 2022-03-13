@@ -1,0 +1,103 @@
+version: "3"
+
+services:
+  assetto-multiserver:
+    build: .
+    restart: always
+    stop_signal: SIGINT
+    ports:
+      # server manager web interface port
+      - 0.0.0.0:8772:8772
+      # be sure to add ports for each assetto corsa server instance here
+      - 0.0.0.0:9600-9604:9600-9604
+      - 0.0.0.0:9600-9604:9600-9604/udp
+      - 0.0.0.0:8081-8085:8081-8085
+      # stracker
+      - 0.0.0.0:9642-9646:9642-9646
+      - 0.0.0.0:9642-9646:9642-9646/udp
+      - 0.0.0.0:50041-50045:50041-50045
+      # real penalty
+      - 0.0.0.0:8108-8112:8108-8112
+      - 0.0.0.0:8108-8112:8108-8112/udp
+      # kissmyrank
+      - 0.0.0.0:7789-7793:7789-7793
+      - 0.0.0.0:13000-13004:13000-13004
+      # ports:
+      - 10100:10100
+      # port used by simview for websocket
+      - 12000-12005:12000-12005
+      
+    # set the entrypoint to either './server-manager' or './assetto-multiserver-manager'
+    entrypoint: ./assetto-multiserver-manager
+    volumes:
+      - ./conf_servermanager/ACSM.License:/home/assetto/server-manager/ACSM.License
+      - ./conf_servermanager/servers.yml:/home/assetto/server-manager/servers.yml
+      - ./conf_servermanager/config.yml:/home/assetto/server-manager/config.yml
+      # note that the 'assetto' folder needs to exist and have the assetto server installed
+      - ./assetto:/home/assetto/server-manager/assetto
+      # plugins      
+      - ./stracker:/home/assetto/server-manager/assetto/stracker
+      - ./realpenalty:/home/assetto/server-manager/assetto/realpenalty
+      - ./kissmyrank:/home/assetto/server-manager/assetto/kissmyrank
+      # note that the 'servers' folder needs to exist, e.g. `mkdir servers` before running docker-compose up
+      - ./servermanager/servers:/home/assetto/server-manager/servers
+      # note that the 'shared_store.json' folder needs to exist, e.g. `mkdir shared_store.json` before running docker-compose up
+      - ./servermanager/shared_store.json:/home/assetto/server-manager/shared_store.json
+      # simview writers 1
+      - ./simview:/home/assetto/server-manager/servers/SERVER_00/assetto/simview
+      - ./simview/bin/SimViewWriter:/home/assetto/server-manager/servers/SERVER_00/assetto/simview/SimViewWriter
+      - ./conf_simview/config1.toml:/home/assetto/server-manager/servers/SERVER_00/assetto/simview/config/config.toml
+      # simview writers 2
+      - ./simview:/home/assetto/server-manager/servers/SERVER_01/assetto/simview
+      - ./simview/bin/SimViewWriter:/home/assetto/server-manager/servers/SERVER_01/assetto/simview/SimViewWriter
+      - ./conf_simview/config2.toml:/home/assetto/server-manager/servers/SERVER_01/assetto/simview/config/config.toml
+      # simview writers 3
+      - ./simview:/home/assetto/server-manager/servers/SERVER_02/assetto/simview
+      - ./simview/bin/SimViewWriter:/home/assetto/server-manager/servers/SERVER_02/assetto/simview/SimViewWriter
+      - ./conf_simview/config3.toml:/home/assetto/server-manager/servers/SERVER_02/assetto/simview/config/config.toml
+      # simview writers 4
+      - ./simview:/home/assetto/server-manager/servers/SERVER_03/assetto/simview
+      - ./simview/bin/SimViewWriter:/home/assetto/server-manager/servers/SERVER_03/assetto/simview/SimViewWriter
+      - ./conf_simview/config4.toml:/home/assetto/server-manager/servers/SERVER_03/assetto/simview/config/config.toml
+      # simview writers 5
+      - ./simview:/home/assetto/server-manager/servers/SERVER_04/assetto/simview
+      - ./simview/bin/SimViewWriter:/home/assetto/server-manager/servers/SERVER_04/assetto/simview/SimViewWriter
+      - ./conf_simview/config5.toml:/home/assetto/server-manager/servers/SERVER_04/assetto/simview/config/config.toml
+    networks:
+      vpcbr:
+        ipv4_address: 10.5.0.7
+  mysql:
+    image: mysql:latest
+    volumes:
+      - "./mysql:/var/lib/mysql"
+      - "./simview/data:/docker-entrypoint-initdb.d"
+    restart: always
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpw
+      MYSQL_DATABASE: simview
+      MYSQL_USER: simview
+      MYSQL_PASSWORD: simviewpw
+      MYSQL_ROOT_HOST: '%'
+    networks:
+      vpcbr:
+        ipv4_address: 10.5.0.5
+  simview_http:
+    build: ./conf_simview
+    restart: always
+    volumes:
+      - ./simview:/home/assetto/server-manager/servers/SERVER_00/assetto/simview
+      - ./conf_simview/config1.toml:/home/assetto/server-manager/servers/SERVER_00/assetto/simview/config/config.toml
+      - ./assetto:/home/assetto/server-manager/assetto
+      - ./servermanager/servers:/home/assetto/server-manager/servers
+    network_mode: "service:assetto-multiserver"
+    depends_on:
+      - assetto-multiserver
+
+networks:
+  vpcbr:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 10.5.0.0/16
