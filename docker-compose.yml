@@ -22,7 +22,7 @@ services:
       # kissmyrank
       - 0.0.0.0:7789-7793:7789-7793
       - 0.0.0.0:13000-13004:13000-13004
-      # ports:
+      # simview web interface port
       - 10100:10100
       # port used by simview for websocket
       - 12000-12005:12000-12005
