@@ -25,7 +25,7 @@ services:
       # simview web interface port
       - 10100:10100
       # port used by simview for websocket
-      - 12000-12005:12000-12005
+      - 12500-12505:12500-12505
       
     # set the entrypoint to either './server-manager' or './assetto-multiserver-manager'
     entrypoint: ./assetto-multiserver-manager

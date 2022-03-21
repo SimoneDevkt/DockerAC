@@ -125,8 +125,7 @@ update.driver.name = false
     # proxy app (like sTracker or ACRelay) else you can leave it to default (0) so that it
     # will automatically get picked from the server_cfg.ini file
     # Default: 0 (port will be picked from AC server config file)
-    # 11100
-    port = 11104
+    port = 11504
 
     # Port used by SimView to received packets from AC server
     # In AC server's server_cfg.ini file, the port set in UDP_PLUGIN_ADDRESS.
@@ -134,8 +133,7 @@ update.driver.name = false
     # You only need to set it when you are using some
     # proxy app (like sTracker or ACRelay) else you can leave it to default (0) so that it
     # will automatically get picked from the server_cfg.ini file
-    # '10.5.0.7:12100'
-    local.port = 12104
+    local.port = 12504
 
     # With Assetto Corsa Server Manager (ACSM) v2+, the AC server log format has been changed.
     # To get correct leaderboard with Sector times and Tyre info make this config true when using AC servers
