@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:18.04
 
 ENV SERVER_MANAGER_DIR /home/assetto/server-manager
 ENV SERVER_INSTALL_DIR ${SERVER_MANAGER_DIR}/assetto
