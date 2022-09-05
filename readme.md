@@ -19,6 +19,7 @@ copy the acsm_v2.1.6_linux-amd64.zip folder from https://emperorservers.com/cont
 
 copy the ACSM.License file from https://emperorservers.com/control-panel to conf_servermanager folder
 
+remove the readme.md file from mysql folder
 
 open prompt, go to project folder and run
 ```
