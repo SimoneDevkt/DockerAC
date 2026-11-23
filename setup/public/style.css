@@ -26,6 +26,8 @@
   }
 }
 * { box-sizing: border-box; }
+/* display rules below (grid, flex) must not override the hidden attribute */
+[hidden] { display: none !important; }
 body {
   margin: 0;
   background: var(--bg);
@@ -62,9 +64,9 @@ code { background: var(--code); padding: 1px 5px; border-radius: 4px; font-size:
 .choice input { margin-top: 4px; accent-color: var(--accent); }
 .inline { display: flex; align-items: center; gap: 8px; }
 .inline input { width: 80px; }
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
-.grid label, label.block { display: flex; flex-direction: column; gap: 4px; }
-.span { grid-column: 1 / -1; margin: 0; }
+.stack { display: flex; flex-direction: column; gap: 12px; max-width: 420px; }
+.stack label, label.block { display: flex; flex-direction: column; gap: 4px; }
+.stack p { margin: 0; }
 label.block { margin-bottom: 16px; }
 input:not([type=radio]):not([type=file]) {
   font: inherit; color: inherit; background: var(--bg);
