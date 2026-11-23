@@ -31,11 +31,13 @@ Open `http://<host>:8772`, log in with the password from the logs (or set `SETUP
      (both from the emperorservers.com control panel), pick single server or multiserver and the
      number of servers;
    - *free*: it's downloaded from GitHub automatically.
-2. **Assetto Corsa server**
-   - *built into ACSM* (paid only): nothing to do, upload cars and tracks from the Server Manager UI;
+2. **Assetto Corsa server** (free Server Manager only, the paid ACSM always uses its built-in
+   server: upload cars and tracks from the Server Manager UI)
+   - *upload* the Linux `acServer` binary or a zip of the dedicated server folder, both found in
+     `steamapps/common/assettocorsa/server`. With the binary alone the server works, but the client
+     checksum of `system/data/surfaces.ini` is disabled;
    - *steamcmd*: steamcmd is downloaded into the volume and installs app `302550`.
      A dedicated Steam account without Steam Guard is recommended; credentials are not saved;
-   - *zip upload* of an existing dedicated server folder;
    - *already present*: if `./data/assetto/acServer` already exists.
 3. **Plugins** (optional): upload the zips exactly as downloaded
    ([sTracker](https://www.racedepartment.com/downloads/stracker.3510/),

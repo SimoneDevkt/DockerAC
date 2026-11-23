@@ -30,10 +30,6 @@ function fmtSize(bytes) {
 // --- conditional sections -------------------------------------------------
 
 function refreshVisibility() {
-  // the built-in acServer only exists in the paid ACSM
-  if (radio('variant') === 'free' && radio('acServer') === 'builtin') {
-    setRadio('acServer', $('#existing-ac').hidden ? 'steam' : 'existing');
-  }
   for (const el of $$('[data-show]')) {
     const [name, value] = el.dataset.show.split('=');
     el.hidden = radio(name) !== value;
@@ -189,7 +185,7 @@ function showSetup(state) {
 
   if (state.servers) $('#servers').value = state.servers;
   $('#existing-ac').hidden = !state.hasAcServer;
-  setRadio('acServer', state.hasAcServer ? 'existing' : 'builtin');
+  if (state.hasAcServer) setRadio('acServer', 'existing');
 
   if (state.installed) {
     const { VARIANT, MODE } = state.installed;

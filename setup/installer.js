@@ -25,7 +25,7 @@ const AC_SERVER_APP_ID = '302550';
 export const UPLOAD_KINDS = {
   acsm: { label: 'Assetto Corsa Server Manager (zip)', maxBytes: 1024 ** 3 },
   license: { label: 'ACSM.License', maxBytes: 1024 ** 2 },
-  assetto: { label: 'Assetto Corsa dedicated server (zip)', maxBytes: 8 * 1024 ** 3 },
+  assetto: { label: 'Assetto Corsa dedicated server (acServer or zip)', maxBytes: 8 * 1024 ** 3 },
   stracker: { label: 'sTracker', maxBytes: 1024 ** 3 },
   realpenalty: { label: 'Real Penalty', maxBytes: 1024 ** 3 },
   kissmyrank: { label: 'KissMyRank', maxBytes: 1024 ** 3 },
@@ -107,6 +107,8 @@ async function detectArchive(file) {
     const { buffer } = await fh.read(Buffer.alloc(4), 0, 4, 0);
     if (buffer[0] === 0x50 && buffer[1] === 0x4b) return 'zip';
     if (buffer[0] === 0x1f && buffer[1] === 0x8b) return 'tgz';
+    if (buffer[0] === 0x7f && buffer.toString('latin1', 1, 4) === 'ELF') return 'elf';
+    if (buffer[0] === 0x4d && buffer[1] === 0x5a) return 'exe';
     return null;
   } finally {
     await fh.close();
@@ -288,32 +290,50 @@ async function installFree(log, opts) {
   await installLuaPlugins(log, await stripWrappers(ex));
 }
 
+// Directories the AC server and the free Server Manager expect. The free Server
+// Manager treats the server as installed only if 'system' exists, otherwise it
+// tries to install it with steamcmd on every start.
+const AC_SKELETON = ['cfg', 'content/cars', 'content/tracks', 'content/weather', 'system/data', 'setups', 'results', 'logs'];
+
+async function ensureAcSkeleton(log) {
+  for (const dir of AC_SKELETON) await fs.mkdir(path.join(ASSETTO_DIR, dir), { recursive: true });
+  const blacklist = path.join(ASSETTO_DIR, 'blacklist.txt');
+  if (!(await exists(blacklist))) await fs.writeFile(blacklist, '');
+  if (!(await exists(path.join(ASSETTO_DIR, 'system', 'data', 'surfaces.ini')))) {
+    log('note: system/data/surfaces.ini is missing (only the acServer binary was installed): ' +
+      'the server works, but the client checksum for that file is disabled. ' +
+      'Upload the whole dedicated server folder as a zip to include it.');
+  }
+}
+
 async function installAcServer(log, opts, uploads) {
+  if (opts.variant === 'acsm') {
+    log('== AC server: built into ACSM (Server Manager creates a barebones install)');
+    return;
+  }
+
   await fs.mkdir(ASSETTO_DIR, { recursive: true });
   const acServer = path.join(ASSETTO_DIR, 'acServer');
 
   switch (opts.acServer) {
-    case 'builtin':
-      if (opts.variant !== 'acsm') throw new Error('the built-in server is only available with the paid ACSM');
-      log('== AC server: built into ACSM (Server Manager creates a barebones install)');
-      return;
-
     case 'existing':
-      if (!(await exists(acServer))) throw new Error(`acServer not found in ${ASSETTO_DIR}`);
       log('== AC server: using the existing assetto folder');
-      await chmodX(acServer);
-      return;
+      break;
 
     case 'upload': {
-      if (!uploads.assetto) throw new Error('upload the zip of the dedicated server folder');
-      log('== AC server: installing from the uploaded zip');
-      const ex = path.join(TMP_DIR, 'x-assetto');
-      await extract(log, uploadPath('assetto'), ex);
-      const found = await findFile(ex, ['acServer', 'acServer.exe']);
-      const root = found ? path.dirname(found) : await stripWrappers(ex);
-      await copyMerge(log, root, ASSETTO_DIR);
-      await chmodX(acServer);
-      return;
+      const file = uploadPath('assetto');
+      if ((await detectArchive(file)) === 'elf') {
+        log('== AC server: installing the uploaded acServer binary');
+        await fs.copyFile(file, acServer);
+      } else {
+        log('== AC server: installing from the uploaded archive');
+        const ex = path.join(TMP_DIR, 'x-assetto');
+        await extract(log, file, ex);
+        const found = await findFile(ex, ['acServer', 'acServer.exe']);
+        const root = found ? path.dirname(found) : await stripWrappers(ex);
+        await copyMerge(log, root, ASSETTO_DIR);
+      }
+      break;
     }
 
     case 'steam': {
@@ -342,14 +362,19 @@ async function installAcServer(log, opts, uploads) {
       if (!(await exists(acServer))) {
         throw new Error('steamcmd did not install acServer: check credentials and Steam Guard in the log');
       }
-      await chmodX(acServer);
-      log('acServer installed');
-      return;
+      break;
     }
 
     default:
       throw new Error('choose how to install the Assetto Corsa server');
   }
+
+  if (!(await exists(acServer))) {
+    throw new Error('acServer (Linux binary) not found: the archive must contain the dedicated server folder');
+  }
+  await chmodX(acServer);
+  await ensureAcSkeleton(log);
+  log('acServer ready');
 }
 
 async function installPlugin(log, kind) {
@@ -389,12 +414,16 @@ export async function install(opts, log) {
   const uploads = await listUploads();
 
   // validate the choices before downloading or copying anything
-  const acChoices = opts.variant === 'acsm' ? ['builtin', 'steam', 'upload', 'existing'] : ['steam', 'upload', 'existing'];
-  if (!acChoices.includes(opts.acServer)) throw new Error('choose how to install the Assetto Corsa server');
-  if (opts.acServer === 'steam' && (!opts.steam?.user || !opts.steam?.pass)) throw new Error('enter your Steam username and password');
-  if (opts.acServer === 'upload' && !uploads.assetto) throw new Error('upload the zip of the dedicated server folder');
-  if (opts.acServer === 'existing' && !(await exists(path.join(ASSETTO_DIR, 'acServer')))) {
-    throw new Error(`acServer not found in ${ASSETTO_DIR}`);
+  if (opts.variant === 'free') {
+    if (!['steam', 'upload', 'existing'].includes(opts.acServer)) throw new Error('choose how to install the Assetto Corsa server');
+    if (opts.acServer === 'steam' && (!opts.steam?.user || !opts.steam?.pass)) throw new Error('enter your Steam username and password');
+    if (opts.acServer === 'upload' && !uploads.assetto) throw new Error('upload the acServer binary or a zip of the dedicated server folder');
+    if (opts.acServer === 'upload' && (await detectArchive(uploadPath('assetto'))) === 'exe') {
+      throw new Error('this is acServer.exe (Windows): upload the Linux acServer, the file without extension');
+    }
+    if (opts.acServer === 'existing' && !(await exists(path.join(ASSETTO_DIR, 'acServer')))) {
+      throw new Error(`acServer not found in ${ASSETTO_DIR}`);
+    }
   }
 
   if (opts.variant === 'acsm') await installAcsm(log, opts, uploads);

@@ -36,7 +36,7 @@
         <label class="choice">
           <input type="radio" name="variant" value="acsm" checked>
           <span><strong>Assetto Corsa Server Manager</strong> (paid)<br>
-          <small class="muted">emperorservers.com · ships its own acServer</small></span>
+          <small class="muted">emperorservers.com · built-in AC server</small></span>
         </label>
         <label class="choice">
           <input type="radio" name="variant" value="free">
@@ -65,20 +65,17 @@
       </p>
     </section>
 
-    <section class="card">
+    <section class="card" data-show="variant=free">
       <h2><span class="step">2</span> Assetto Corsa server</h2>
+      <p class="muted">The free Server Manager needs the Kunos dedicated server. You'll find it in your game folder under <code>steamapps/common/assettocorsa/server</code>.</p>
       <div class="choices">
-        <label class="choice" data-show="variant=acsm">
-          <input type="radio" name="acServer" value="builtin">
-          <span><strong>Built into ACSM</strong><br><small class="muted">no download, upload content later from the UI</small></span>
+        <label class="choice">
+          <input type="radio" name="acServer" value="upload" checked>
+          <span><strong>Upload</strong><br><small class="muted">the Linux <code>acServer</code> binary, or a zip of the server folder</small></span>
         </label>
         <label class="choice">
           <input type="radio" name="acServer" value="steam">
           <span><strong>Install with steamcmd</strong><br><small class="muted">app 302550, requires a Steam account</small></span>
-        </label>
-        <label class="choice">
-          <input type="radio" name="acServer" value="upload">
-          <span><strong>Upload a zip</strong><br><small class="muted">of the dedicated server folder</small></span>
         </label>
         <label class="choice" id="existing-ac" hidden>
           <input type="radio" name="acServer" value="existing">
@@ -93,8 +90,9 @@
         <p class="muted span">A dedicated account without Steam Guard is recommended. Credentials are only used for this installation and are not saved.</p>
       </div>
       <div data-show="acServer=upload">
-        <div class="upload" data-kind="assetto" data-accept=".zip,.tar.gz,.tgz">
-          <span class="upload-label">Dedicated server zip</span>
+        <div class="upload" data-kind="assetto">
+          <span class="upload-label">acServer or server folder zip</span>
+          <small class="muted">a zip also includes <code>system/data/surfaces.ini</code>; with the binary alone the client checksum of that file is disabled</small>
         </div>
       </div>
     </section>
