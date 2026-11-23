@@ -120,6 +120,15 @@
       <button type="submit" id="install">Install and start</button>
       <p id="form-error" class="error" hidden></p>
       <pre id="log" hidden></pre>
+      <div id="prompt" class="card notice" hidden>
+        <strong>Steam Guard code required</strong>
+        <p class="muted">Steam has just sent the code by email (or shows it in the Steam Mobile app). Enter it to continue.</p>
+        <div class="row">
+          <input id="prompt-value" autocomplete="one-time-code" placeholder="Code">
+          <button type="button" id="prompt-send">Send</button>
+        </div>
+      </div>
+      <button type="button" id="cancel" class="secondary" hidden>Cancel</button>
       <p id="done" class="success" hidden>Installation complete. Starting Server Manager… this page will reload automatically.</p>
     </section>
   </form>

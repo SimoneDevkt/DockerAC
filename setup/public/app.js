@@ -101,6 +101,31 @@ function waitForServerManager() {
   setTimeout(tick, 2500);
 }
 
+function showPrompt() {
+  const box = $('#prompt');
+  box.hidden = false;
+  $('#prompt-value').value = '';
+  $('#prompt-value').focus();
+  box.scrollIntoView({ block: 'center', behavior: 'smooth' });
+}
+
+async function sendPrompt() {
+  const value = $('#prompt-value').value.trim();
+  if (!value) return;
+  const res = await api('/api/input', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ value }),
+  });
+  if (res.ok) {
+    $('#prompt').hidden = true;
+    $('#log').textContent += '  (code sent)\n';
+  } else {
+    const body = await res.json().catch(() => ({}));
+    $('#log').textContent += `  (could not send the code: ${body.error || res.status})\n`;
+  }
+}
+
 async function runInstall(e) {
   e.preventDefault();
   const btn = $('#install');
@@ -110,6 +135,7 @@ async function runInstall(e) {
   log.hidden = false;
   log.textContent = '';
   btn.disabled = true;
+  $('#cancel').hidden = false;
 
   const opts = {
     variant: radio('variant'),
@@ -147,6 +173,7 @@ async function runInstall(e) {
       for (const line of lines) {
         if (line === '@@DONE') result = { ok: true };
         else if (line.startsWith('@@ERROR ')) result = { ok: false, message: line.slice(8) };
+        else if (line === '@@PROMPT steamguard') showPrompt();
         else log.textContent += `${line}\n`;
       }
       log.scrollTop = log.scrollHeight;
@@ -155,6 +182,8 @@ async function runInstall(e) {
     result = { ok: false, message: ex.message };
   }
 
+  $('#prompt').hidden = true;
+  $('#cancel').hidden = true;
   if (result?.ok) {
     $('#done').hidden = false;
     waitForServerManager();
@@ -206,6 +235,17 @@ function showSetup(state) {
 async function init() {
   for (const el of $$('input[type=radio]')) el.addEventListener('change', refreshVisibility);
   $('#setup').addEventListener('submit', runInstall);
+  $('#prompt-send').addEventListener('click', sendPrompt);
+  $('#prompt-value').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); sendPrompt(); }
+  });
+  $('#cancel').addEventListener('click', async () => {
+    const res = await api('/api/cancel', { method: 'POST' });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      $('#log').textContent += `  (${body.error || 'cannot cancel'})\n`;
+    }
+  });
 
   $('#skip').addEventListener('click', async () => {
     const res = await api('/api/skip', { method: 'POST' });

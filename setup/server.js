@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 import {
   DATA_DIR, TMP_DIR, ASSETTO_DIR, FREE_SM_URL, UPLOAD_KINDS,
   exists, install, listUploads, saveUploadMeta, deleteUpload, uploadPath, readMarker,
+  sendInput, cancelRunning,
 } from './installer.js';
 
 const PORT = parseInt(process.env.SETUP_PORT || '8772', 10);
@@ -189,6 +190,20 @@ async function route(req, res) {
   }
 
   if (req.method === 'POST' && pathname === '/api/install') return handleInstall(req, res);
+
+  // input for the running command (e.g. the Steam Guard code asked by steamcmd)
+  if (req.method === 'POST' && pathname === '/api/input') {
+    const body = await readJson(req).catch(() => ({}));
+    const value = String(body.value || '').trim();
+    if (!value || value.length > 64 || /[\r\n]/.test(value)) return send(res, 400, { error: 'invalid value' });
+    if (!sendInput(value)) return send(res, 409, { error: 'nothing is waiting for input' });
+    return send(res, 200, { ok: true });
+  }
+
+  if (req.method === 'POST' && pathname === '/api/cancel') {
+    if (!cancelRunning()) return send(res, 409, { error: 'nothing to cancel right now' });
+    return send(res, 200, { ok: true });
+  }
 
   if (req.method === 'POST' && pathname === '/api/skip') {
     if (!(await readMarker())) return send(res, 400, { error: 'no existing installation' });

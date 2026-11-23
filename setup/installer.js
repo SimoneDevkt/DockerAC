@@ -81,21 +81,67 @@ export async function readMarker() {
 // ---------------------------------------------------------------------------
 // helpers
 
-function run(log, cmd, args, { cwd, mask = [], allowFail = false } = {}) {
+// The process currently run by the installer, so the setup page can send it
+// input (Steam Guard code) or cancel it.
+let active = null;
+
+export function sendInput(text) {
+  if (!active?.interactive || !active.child.stdin?.writable) return false;
+  if (text.length >= 3) active.mask.push(text); // the pty echoes what we type
+  active.child.stdin.write(`${text}\n`);
+  return true;
+}
+
+export function cancelRunning() {
+  if (!active) return false;
+  active.cancelled = true;
+  try { process.kill(-active.child.pid, 'SIGTERM'); } catch { active.child.kill('SIGTERM'); }
+  return true;
+}
+
+const shellQuote = (s) => `'${String(s).replace(/'/g, `'\\''`)}'`;
+// eslint-disable-next-line no-control-regex
+const ANSI = /\x1b\[[0-9;?]*[A-Za-z]/g;
+
+// Runs a command and streams its output to the log.
+//  mask:        strings to hide in the log (passwords)
+//  interactive: run inside a pseudo terminal (via `script`) and keep stdin open,
+//               so the command behaves as in a terminal and can receive input
+//  prompts:     { regex: promptName } emitted as '@@PROMPT <name>' log lines
+function run(log, cmd, args, { cwd, mask = [], allowFail = false, interactive = false, prompts = [] } = {}) {
+  const masks = [...mask].filter((s) => s && s.length >= 3);
   const shown = args.map((a) => (mask.includes(a) ? '******' : a)).join(' ');
   log(`$ ${path.basename(cmd)} ${shown}`);
+
+  let file = cmd;
+  let argv = args;
+  if (interactive) {
+    file = 'script';
+    argv = ['-qfec', [cmd, ...args].map(shellQuote).join(' '), '/dev/null'];
+  }
+
   return new Promise((resolve, reject) => {
-    const child = spawn(cmd, args, { cwd, stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(file, argv, {
+      cwd,
+      stdio: [interactive ? 'pipe' : 'ignore', 'pipe', 'pipe'],
+      detached: true, // own process group, so cancel kills the whole tree
+    });
+    const current = { child, mask: masks, interactive, cancelled: false };
+    active = current;
+
     const onData = (buf) => {
-      let text = buf.toString();
-      for (const secret of mask) if (secret && secret.length >= 3) text = text.split(secret).join('******');
-      for (const line of text.split(/\r?\n/)) if (line.trim()) log(`  ${line}`);
+      let text = buf.toString().replace(ANSI, '');
+      for (const secret of current.mask) text = text.split(secret).join('******');
+      for (const line of text.split(/\r\n|\r|\n/)) if (line.trim()) log(`  ${line}`);
+      for (const [regex, name] of prompts) if (regex.test(text)) log(`@@PROMPT ${name}`);
     };
     child.stdout.on('data', onData);
     child.stderr.on('data', onData);
     child.on('error', reject);
     child.on('close', (code) => {
-      if (code === 0 || allowFail) resolve(code);
+      if (active === current) active = null;
+      if (current.cancelled) reject(new Error('cancelled'));
+      else if (code === 0 || allowFail) resolve(code);
       else reject(new Error(`${path.basename(cmd)} exited with code ${code}`));
     });
   });
@@ -358,7 +404,13 @@ async function installAcServer(log, opts, uploads) {
         ...login,
         '+app_update', AC_SERVER_APP_ID, 'validate',
         '+quit',
-      ], { cwd: steamDir, mask: [pass, guard].filter(Boolean), allowFail: true });
+      ], {
+        cwd: steamDir,
+        mask: [pass, guard].filter(Boolean),
+        allowFail: true,
+        interactive: true,
+        prompts: [[/steam guard code|two-factor code|two factor code|auth(entication)? code\s*:/i, 'steamguard']],
+      });
       if (!(await exists(acServer))) {
         throw new Error('steamcmd did not install acServer: check credentials and Steam Guard in the log');
       }
