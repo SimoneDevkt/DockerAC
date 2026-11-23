@@ -1,1 +1,0 @@
-Assetto corsa server folder

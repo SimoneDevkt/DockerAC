@@ -1,0 +1,12 @@
+{
+  "name": "dockerac-setup",
+  "version": "1.0.0",
+  "private": true,
+  "description": "First-run setup page for the DockerAC Assetto Corsa Server Manager image",
+  "type": "module",
+  "main": "server.js",
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "MIT"
+}

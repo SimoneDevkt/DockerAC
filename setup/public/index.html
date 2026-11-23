@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DockerAC · Setup</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main>
+  <header>
+    <h1>DockerAC <span>setup</span></h1>
+    <p class="muted">Install Server Manager, the Assetto Corsa server and plugins. Files are stored in the <code>/data</code> volume.</p>
+  </header>
+
+  <section id="login" class="card" hidden>
+    <h2>Sign in</h2>
+    <p class="muted">The password is <code>SETUP_PASSWORD</code>, or the one printed in the container logs (<code>docker compose logs</code>).</p>
+    <form id="login-form" class="row">
+      <input id="password" type="password" placeholder="Setup password" autocomplete="current-password" required>
+      <button type="submit">Sign in</button>
+    </form>
+    <p id="login-error" class="error" hidden></p>
+  </section>
+
+  <form id="setup" hidden>
+    <div id="existing" class="card notice" hidden>
+      <strong>Existing installation:</strong> <span id="existing-desc"></span>
+      <p class="muted">Upload only what you want to update: config, database and content are kept.</p>
+      <button type="button" id="skip" class="secondary">Start without changes</button>
+    </div>
+
+    <section class="card">
+      <h2><span class="step">1</span> Server Manager</h2>
+      <div class="choices">
+        <label class="choice">
+          <input type="radio" name="variant" value="acsm" checked>
+          <span><strong>Assetto Corsa Server Manager</strong> (paid)<br>
+          <small class="muted">emperorservers.com · ships its own acServer</small></span>
+        </label>
+        <label class="choice">
+          <input type="radio" name="variant" value="free">
+          <span><strong>Assetto Server Manager</strong> (free)<br>
+          <small class="muted">JustaPenguin v1.7.9 · MIT · archived project</small></span>
+        </label>
+      </div>
+
+      <div data-show="variant=acsm">
+        <div class="upload" data-kind="acsm" data-accept=".zip,.tar.gz,.tgz">
+          <span class="upload-label">Linux amd64 zip <small class="muted">(acsm_vX.Y.Z_linux-amd64.zip)</small></span>
+        </div>
+        <div class="upload" data-kind="license">
+          <span class="upload-label">ACSM.License</span>
+        </div>
+        <div class="choices compact">
+          <label class="choice"><input type="radio" name="mode" value="multi" checked> <span>Multiserver</span></label>
+          <label class="choice"><input type="radio" name="mode" value="single"> <span>Single server</span></label>
+          <label class="inline" data-show="mode=multi">Number of servers
+            <input type="number" id="servers" min="1" max="50" value="5">
+          </label>
+        </div>
+      </div>
+      <p data-show="variant=free" class="muted">
+        It will be downloaded from GitHub: <code id="free-url"></code>. Single server only, requires the Kunos acServer (step 2).
+      </p>
+    </section>
+
+    <section class="card">
+      <h2><span class="step">2</span> Assetto Corsa server</h2>
+      <div class="choices">
+        <label class="choice" data-show="variant=acsm">
+          <input type="radio" name="acServer" value="builtin">
+          <span><strong>Built into ACSM</strong><br><small class="muted">no download, upload content later from the UI</small></span>
+        </label>
+        <label class="choice">
+          <input type="radio" name="acServer" value="steam">
+          <span><strong>Install with steamcmd</strong><br><small class="muted">app 302550, requires a Steam account</small></span>
+        </label>
+        <label class="choice">
+          <input type="radio" name="acServer" value="upload">
+          <span><strong>Upload a zip</strong><br><small class="muted">of the dedicated server folder</small></span>
+        </label>
+        <label class="choice" id="existing-ac" hidden>
+          <input type="radio" name="acServer" value="existing">
+          <span><strong>Already present</strong><br><small class="muted">acServer found in /data/assetto</small></span>
+        </label>
+      </div>
+
+      <div data-show="acServer=steam" class="grid">
+        <label>Steam username <input id="steam-user" autocomplete="off"></label>
+        <label>Steam password <input id="steam-pass" type="password" autocomplete="off"></label>
+        <label>Steam Guard code <small class="muted">(if required)</small> <input id="steam-guard" autocomplete="off"></label>
+        <p class="muted span">A dedicated account without Steam Guard is recommended. Credentials are only used for this installation and are not saved.</p>
+      </div>
+      <div data-show="acServer=upload">
+        <div class="upload" data-kind="assetto" data-accept=".zip,.tar.gz,.tgz">
+          <span class="upload-label">Dedicated server zip</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2><span class="step">3</span> Plugins <small class="muted">(optional)</small></h2>
+      <p class="muted">Upload the zip exactly as downloaded: the right folder is detected automatically. Configure the plugins afterwards from the Server Manager UI.</p>
+      <div class="upload" data-kind="stracker" data-accept=".zip,.tar.gz,.tgz">
+        <span class="upload-label">sTracker</span>
+      </div>
+      <div class="upload" data-kind="realpenalty" data-accept=".zip,.tar.gz,.tgz">
+        <span class="upload-label">Real Penalty</span>
+      </div>
+      <div class="upload" data-kind="kissmyrank" data-accept=".zip,.tar.gz,.tgz">
+        <span class="upload-label">KissMyRank</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2><span class="step">4</span> Install</h2>
+      <label class="block">Public Server Manager URL
+        <input id="base-url" placeholder="http://my-server:8772">
+        <small class="muted">used by ACSM for sessions and links; only applied if config.yml doesn't exist yet</small>
+      </label>
+      <button type="submit" id="install">Install and start</button>
+      <p id="form-error" class="error" hidden></p>
+      <pre id="log" hidden></pre>
+      <p id="done" class="success" hidden>Installation complete. Starting Server Manager… this page will reload automatically.</p>
+    </section>
+  </form>
+</main>
+<template id="upload-tpl">
+  <div class="upload-row">
+    <label class="file-btn secondary">Choose file<input type="file" hidden></label>
+    <span class="upload-status muted">no file</span>
+    <button type="button" class="link remove" hidden>remove</button>
+  </div>
+  <progress max="1" value="0" hidden></progress>
+</template>
+<script src="/app.js"></script>
+</body>
+</html>
