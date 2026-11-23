@@ -88,9 +88,26 @@ data/
 
 ## Ports
 
-The compose file exposes the ports for 5 servers (game `9600-9604` TCP/UDP, HTTP `8081-8085`,
-sTracker, Real Penalty, KissMyRank). Set the same ports for each server in the Server Manager
-options and adjust the ranges if you use more servers.
+The compose file exposes the ports for 10 servers:
+
+| | Ports |
+|---|---|
+| Setup page / Server Manager | `8772` |
+| Game TCP/UDP | `9600-9609` |
+| Game HTTP | `8081-8090` |
+| sTracker | `9642-9651` TCP/UDP, `50041-50050` |
+| Real Penalty | `8108-8117` TCP/UDP |
+| KissMyRank | `7789-7798`, `13000-13009` |
+
+Set the ports of each server in the Server Manager options so they fall within these ranges.
+[This spreadsheet](https://docs.google.com/spreadsheets/d/1RBrfKjMcnvTGKRZwZM2Q_K0to7L6OLk7eCRYsQPyuxU/edit#gid=0)
+lists the ports to use for every server and plugin. Adjust the ranges if you use more servers.
+
+Without compose:
+
+```sh
+docker run -d --name assetto --restart unless-stopped --stop-timeout 30 -v "$PWD/data:/data" -p 8772:8772 -p 9600-9609:9600-9609 -p 9600-9609:9600-9609/udp -p 8081-8090:8081-8090 -p 9642-9651:9642-9651 -p 9642-9651:9642-9651/udp -p 50041-50050:50041-50050 -p 8108-8117:8108-8117 -p 8108-8117:8108-8117/udp -p 7789-7798:7789-7798 -p 13000-13009:13000-13009 ghcr.io/simonedevkt/dockerac:latest
+```
 
 ## Migrating from the old version (SimView/MySQL)
 
