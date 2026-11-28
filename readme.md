@@ -121,3 +121,8 @@ SimView has been removed. To keep your data, move the old folders into `./data`:
 
 GitHub Actions builds `ghcr.io/simonedevkt/dockerac` on every push to `master` (`latest` tag)
 and on `v*` tags (semver tags). Local build: `docker compose build`.
+
+## License
+
+[MIT](LICENSE) — applies to the code in this repository only. Assetto Corsa Server Manager,
+its licence and the plugins are third-party software and are not covered or redistributed here.
